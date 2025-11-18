@@ -145,6 +145,7 @@ include(FindPkgConfig)
 if(WITH_GTK4)
   pkg_check_modules(GTKMM gtkmm-4.0 REQUIRED)
   pkg_check_modules(GTKSV gtksourceview-5 REQUIRED)
+  pkg_check_modules(ADWAITA libadwaita-1 REQUIRED)
   pkg_check_modules(GLIBMM glibmm-2.68 REQUIRED)
   pkg_check_modules(PANGOMM pangomm-2.48 REQUIRED)
 else()
@@ -193,6 +194,11 @@ include_directories(
   SYSTEM ${FRIBIDI_INCLUDE_DIRS}
   . # config.h
 )
+if(WITH_GTK4)
+  include_directories(
+    SYSTEM ${ADWAITA_INCLUDE_DIRS}
+  )
+endif()
 if(USE_SHARED_FMT_SPDLOG)
   include_directories(
     SYSTEM ${FMT_INCLUDE_DIRS}

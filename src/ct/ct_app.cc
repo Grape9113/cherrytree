@@ -28,6 +28,65 @@
 #include "config.h"
 #include "ct_logging.h"
 #include <iostream>
+#if GTKMM_MAJOR_VERSION >= 4
+#include <adwaita.h>
+#include <gdkmm/display.h>
+#else
+#include <gdkmm/screen.h>
+#endif
+
+namespace
+{
+// Soft, card-like styling that mirrors modern GNOME/libadwaita surfaces without
+// altering layout or functionality.
+constexpr auto kModernCss = R"( /* cherry tree modern */
+@define-color ct-accent @theme_selected_bg_color;
+
+.ct-app-win {
+  background-color: @window_bg_color;
+}
+
+headerbar,
+.ct-surface,
+.ct-statusbar,
+.ct-toolbar {
+  border-radius: 12px;
+  margin: 6px;
+  padding: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background-color: @window_bg_color;
+}
+
+.ct-toolbar button,
+.ct-statusbar button {
+  border-radius: 10px;
+}
+
+.ct-tree-scroll-panel,
+.ct-view-panel {
+  background-color: mix(@window_bg_color, @text_color, 0.02);
+  border-radius: 10px;
+  margin: 6px;
+  padding: 4px;
+}
+
+paned separator,
+paned > separator {
+  min-width: 6px;
+  background: alpha(@ct-accent, 0.2);
+  border-radius: 6px;
+}
+
+statusbar.ct-statusbar {
+  padding: 8px;
+}
+
+.ct-headerbar title,
+.ct-headerbar subtitle {
+  font-weight: 600;
+}
+ )";
+} // namespace
 
 CtApp::CtApp(const Glib::ustring application_id_postfix, Gio::ApplicationFlags flags)
  : Gtk::Application{Glib::ustring{"net.giuspen.cherrytree"} + application_id_postfix, Gio::APPLICATION_HANDLES_OPEN | flags}
@@ -35,6 +94,10 @@ CtApp::CtApp(const Glib::ustring application_id_postfix, Gio::ApplicationFlags f
 {
 #if GTK_SOURCE_MAJOR_VERSION >= 4
     gtk_source_init();
+#endif
+
+#if GTKMM_MAJOR_VERSION >= 4
+    adw_init();
 #endif
 
     // action to call from second instance
@@ -120,6 +183,26 @@ void CtApp::_on_startup()
     gtk_source_style_scheme_manager_append_search_path(pGtkSourceStyleSchemeManager, ctStylesConfig.c_str());
 
     _rCssProvider = Gtk::CssProvider::create();
+
+    try {
+        _rCssProvider->load_from_data(kModernCss);
+#if GTKMM_MAJOR_VERSION >= 4
+        if (auto display = Gdk::Display::get_default()) {
+            Gtk::StyleContext::add_provider_for_display(display,
+                                                        _rCssProvider,
+                                                        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+#else
+        if (auto screen = Gdk::Screen::get_default()) {
+            Gtk::StyleContext::add_provider_for_screen(screen,
+                                                       _rCssProvider,
+                                                       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+#endif
+    }
+    catch (const Glib::Error& ex) {
+        spdlog::warn("Failed to load modern UI css: {}", ex.what());
+    }
 
 #if GTKMM_MAJOR_VERSION < 4 && !defined(GTKMM_DISABLE_DEPRECATED)
     _uCtStatusIcon.reset(new CtStatusIcon{*this, _pCtConfig});

@@ -77,6 +77,7 @@ CtMainWin::CtMainWin(bool                            no_gui,
 
     get_style_context()->add_class("ct-app-win");
     set_icon(_pGtkIconTheme->load_icon(CtConst::APP_NAME, 48));
+    _vboxMain.get_style_context()->add_class("ct-surface");
 
     _uCtActions.reset(new CtActions{this});
     _uCtMenu.reset(new CtMenu{this});
@@ -107,6 +108,8 @@ CtMainWin::CtMainWin(bool                            no_gui,
     _pScrolledWindowMenuBar = Gtk::manage(new Gtk::ScrolledWindow{});
     _pScrolledWindowMenuBar->add(*_pMenuBar);
     _pMenuBar->set_name("MenuBar");
+    _pMenuBar->get_style_context()->add_class("ct-toolbar");
+    _pScrolledWindowMenuBar->get_style_context()->add_class("ct-surface");
     _pBookmarksSubmenus[0] = CtMenu::find_menu_item(_pMenuBar, "BookmarksSubMenu");
     auto pPopumMenuTree = _uCtMenu->get_popup_menu(CtMenu::POPUP_MENU_TYPE::Node);
     for (Gtk::Widget* child : pPopumMenuTree->get_children()) {
@@ -127,6 +130,7 @@ CtMainWin::CtMainWin(bool                            no_gui,
         _pHeaderBar = Gtk::manage(new Gtk::HeaderBar{});
         _pHeaderBar->set_has_subtitle(false);
         _pHeaderBar->set_show_close_button(true);
+        _pHeaderBar->get_style_context()->add_class("ct-headerbar");
         _pHeaderBar->pack_start(*Gtk::manage(new Gtk::Label{" "}));
         _pHeaderBar->pack_start(*_pScrolledWindowMenuBar);
         _pHeaderBar->pack_start(*Gtk::manage(new Gtk::Label{" "}));
@@ -137,6 +141,7 @@ CtMainWin::CtMainWin(bool                            no_gui,
         _vboxMain.pack_start(*_pScrolledWindowMenuBar, false, false);
     }
     for (auto pToolbar : _pToolbars) {
+        pToolbar->get_style_context()->add_class("ct-toolbar");
         _vboxMain.pack_start(*pToolbar, false, false);
     }
     _vboxMain.pack_start(_vPaned);
@@ -489,13 +494,8 @@ Gtk::Box& CtMainWin::_init_status_bar()
     _ctStatusBar.hbox.pack_start(_ctStatusBar.frame, false, true);
     _ctStatusBar.hbox.pack_start(_ctStatusBar.stopButton, false, true);
 
-    _ctStatusBar.hbox.get_style_context()->add_class("ct-status-bar");
-    // todo: move to css
-    _ctStatusBar.frame.set_border_width(1);
-    _ctStatusBar.statusBar.set_margin_top(0);
-    _ctStatusBar.statusBar.set_margin_bottom(0);
-    ((Gtk::Frame*)_ctStatusBar.statusBar.get_children()[0])->get_child()->set_margin_top(1);
-    ((Gtk::Frame*)_ctStatusBar.statusBar.get_children()[0])->get_child()->set_margin_bottom(1);
+    _ctStatusBar.hbox.get_style_context()->add_class("ct-statusbar");
+    _ctStatusBar.frame.set_shadow_type(Gtk::SHADOW_NONE);
     _ctStatusBar.hbox.set_border_width(0);
 
     _ctStatusBar.stopButton.signal_clicked().connect([this](){
