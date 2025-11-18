@@ -108,6 +108,11 @@ else()
     spdlog::spdlog
   )
 endif()
+if(WITH_GTK4)
+  target_link_libraries(cherrytree_shared
+    ${ADWAITA_LIBRARIES}
+  )
+endif()
 if(USE_VTE)
   target_link_libraries(cherrytree_shared
     ${VTE_LIBRARIES}
